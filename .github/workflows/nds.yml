@@ -62,7 +62,13 @@ jobs:
             fi
             # NDS header: logo checksum is a fixed 16-bit value (0xCF56) at
             # offset 0x15C, validated by every real NDS boot ROM/emulator.
-            checksum=$(xxd -s 0x15C -l 2 -e -p "$rom")
+            # Read the two raw bytes in file order (no -e endian-swap):
+            # devkitARM/ndstool write this field such that the plain byte
+            # sequence at 0x15C is CF 56, matching the documented constant
+            # directly. The previous `-e` flag byte-swapped 16-bit groups
+            # and produced 56cf, which never matched a real ROM - this was
+            # never validated against an actual build until this game.
+            checksum=$(xxd -s 0x15C -l 2 -p "$rom")
             if [ "$checksum" != "cf56" ]; then
               echo "FAIL: $rom logo checksum at 0x15C is 0x$checksum, expected 0xcf56"
               exit 1
