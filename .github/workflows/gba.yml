@@ -71,13 +71,13 @@ jobs:
               echo "FAIL: $rom size $size bytes is outside the plausible GBA ROM range (192B-32MB)"
               exit 1
             fi
-            # Nintendo logo is 156 bytes starting at offset 0x04 of the header.
-            # We don't compare the full bitmap (copyrighted), just confirm the
-            # region isn't all-zero/garbage, and that the fixed-value fields
-            # around it (0x9C fixed byte, 0xB2 device type) look sane.
-            fixed_byte=$(xxd -s 0x9C -l 1 -p "$rom")
+            # Nintendo logo occupies bytes 0x04-0x9F (156 bytes) of the header.
+            # We don't compare the full bitmap (copyrighted); instead we
+            # check the documented "fixed value" byte at 0xB2, which every
+            # official and homebrew GBA ROM header sets to 0x96.
+            fixed_byte=$(xxd -s 0xB2 -l 1 -p "$rom")
             if [ "$fixed_byte" != "96" ]; then
-              echo "FAIL: $rom fixed header byte at 0x9C is 0x$fixed_byte, expected 0x96"
+              echo "FAIL: $rom fixed header byte at 0xB2 is 0x$fixed_byte, expected 0x96"
               exit 1
             fi
             echo "OK: $rom ($size bytes, header fixed byte present)"
