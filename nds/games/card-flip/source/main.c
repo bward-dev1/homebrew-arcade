@@ -123,7 +123,7 @@ int main(void) {
 
     // Seed the shuffle from the DS's own tick counter so each game deals
     // a different layout without needing any external entropy source.
-    srand(IPC->random ^ (unsigned)cpuGetTiming());
+    srand(cpuGetTiming());
 
     GameState state = STATE_TITLE;
     drawTitle();
