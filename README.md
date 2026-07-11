@@ -29,6 +29,29 @@ Each platform directory is independent: its own games/ tree, its own
 workflow, its own toolchain group. A push that only touches `gba/**` never
 triggers the nds/3ds workflows and vice versa.
 
+## Games (15/15 — GBA 5/5, NDS 5/5, 3DS 5/5, all CI-green)
+
+### GBA (`gba/games/`)
+- **pixel-jumper** — side-scrolling run/jump platformer against gravity and gaps.
+- **brick-blaster** — Breakout-style paddle-and-ball brick clearing.
+- **key-quest** — timed maze navigation to collect keys before time runs out.
+- **mole-mash** — whack-a-mole reaction/timing game.
+- **star-siege** — space shooter blasting waves of enemies.
+
+### NDS (`nds/games/`)
+- **maze-muncher** — Pac-Man-style maze chase, dodging/eluding pursuing ghosts.
+- **grid-slither** — classic snake, growing and avoiding self-collision.
+- **card-flip** — memory card-matching pairs game.
+- **paddle-bounce** — Breakout-style paddle-and-ball brick clearing.
+- **star-defender** — top-down shooter defending against descending enemies.
+
+### 3DS (`n3ds/games/`)
+- **simon-sez** — memory pattern game, repeat an escalating sequence.
+- **block-drop** — Tetris-style falling-block stacking puzzle.
+- **meteor-dash** — top-down dodge/survival against incoming hazards.
+- **vault-run** — maze navigation collecting numbered tumblers in strict order against a clock.
+- **sky-hopper** — vertical climbing platform jumper: hop between platforms up a static tower while an accelerating camera scroll threatens to leave you behind.
+
 ## Adding a new game
 
 Drop a new directory under the right platform's `games/` folder with a
