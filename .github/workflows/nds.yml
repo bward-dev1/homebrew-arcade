@@ -1,0 +1,83 @@
+name: NDS build + smoke test
+
+on:
+  push:
+    paths:
+      - "nds/**"
+      - ".github/workflows/nds.yml"
+  workflow_dispatch:
+
+env:
+  DEVKITPRO: /opt/devkitpro
+  DEVKITARM: /opt/devkitpro/devkitARM
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install devkitPro pacman
+        run: |
+          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
+          chmod +x ./install-devkitpro-pacman
+          echo "y" | sudo DEBIAN_FRONTEND=noninteractive ./install-devkitpro-pacman
+
+      - name: Install nds-dev toolchain
+        run: |
+          sudo dkp-pacman -Syu --noconfirm
+          sudo dkp-pacman -S --noconfirm nds-dev
+
+      - name: Build all NDS games
+        run: |
+          export PATH="$DEVKITARM/bin:$PATH"
+          shopt -s nullglob
+          games=(nds/games/*/)
+          if [ ${#games[@]} -eq 0 ]; then
+            echo "No games under nds/games/ - nothing to build."
+            exit 0
+          fi
+          for dir in "${games[@]}"; do
+            name=$(basename "$dir")
+            echo "== building $name =="
+            make -C "$dir"
+          done
+
+      # Same rationale as gba.yml: a headless melonDS/desmume boot is not
+      # reliably available via apt on ubuntu-latest and is fragile to keep
+      # green in unattended CI, so we fall back to an NDS ROM header check
+      # (Nintendo logo checksum field + plausible file size) instead of a
+      # real emulator boot.
+      - name: Header sanity check (fallback smoke test)
+        run: |
+          shopt -s nullglob
+          roms=(nds/games/*/*.nds)
+          if [ ${#roms[@]} -eq 0 ]; then
+            echo "No .nds ROMs produced - nothing to check."
+            exit 0
+          fi
+          for rom in "${roms[@]}"; do
+            echo "== checking $rom =="
+            size=$(stat -c%s "$rom")
+            if [ "$size" -lt 512 ] || [ "$size" -gt 536870912 ]; then
+              echo "FAIL: $rom size $size bytes is outside the plausible NDS ROM range"
+              exit 1
+            fi
+            # NDS header: logo checksum is a fixed 16-bit value (0xCF56) at
+            # offset 0x15C, validated by every real NDS boot ROM/emulator.
+            checksum=$(xxd -s 0x15C -l 2 -e -p "$rom")
+            if [ "$checksum" != "cf56" ]; then
+              echo "FAIL: $rom logo checksum at 0x15C is 0x$checksum, expected 0xcf56"
+              exit 1
+            fi
+            echo "OK: $rom ($size bytes, logo checksum valid)"
+          done
+
+      - name: Upload ROM artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nds-roms
+          path: nds/games/*/*.nds
+          if-no-files-found: ignore

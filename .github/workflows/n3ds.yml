@@ -1,0 +1,91 @@
+name: 3DS build + smoke test
+
+on:
+  push:
+    paths:
+      - "n3ds/**"
+      - ".github/workflows/n3ds.yml"
+  workflow_dispatch:
+
+env:
+  DEVKITPRO: /opt/devkitpro
+  DEVKITARM: /opt/devkitpro/devkitARM
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install devkitPro pacman
+        run: |
+          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
+          chmod +x ./install-devkitpro-pacman
+          echo "y" | sudo DEBIAN_FRONTEND=noninteractive ./install-devkitpro-pacman
+
+      - name: Install 3ds-dev toolchain
+        run: |
+          sudo dkp-pacman -Syu --noconfirm
+          sudo dkp-pacman -S --noconfirm 3ds-dev
+
+      - name: Build all 3DS games
+        run: |
+          export PATH="$DEVKITARM/bin:$PATH"
+          shopt -s nullglob
+          games=(n3ds/games/*/)
+          if [ ${#games[@]} -eq 0 ]; then
+            echo "No games under n3ds/games/ - nothing to build."
+            exit 0
+          fi
+          for dir in "${games[@]}"; do
+            name=$(basename "$dir")
+            echo "== building $name =="
+            make -C "$dir"
+          done
+
+      # Same rationale as gba.yml/nds.yml: Lime3DS/Citra have no reliable
+      # headless apt package on ubuntu-latest, so a real emulator boot in CI
+      # would be the flakiest link in the pipeline for little benefit over a
+      # format check. We fall back to verifying the file magic devkitPro's
+      # own tools stamp on output: "3DSX" for homebrew launcher binaries,
+      # or a non-empty file for .cia (whose header is a signed ncsd/cia
+      # container format not worth partially re-implementing here).
+      - name: Header sanity check (fallback smoke test)
+        run: |
+          shopt -s nullglob
+          threedsx=(n3ds/games/*/*.3dsx)
+          cias=(n3ds/games/*/*.cia)
+          if [ ${#threedsx[@]} -eq 0 ] && [ ${#cias[@]} -eq 0 ]; then
+            echo "No .3dsx or .cia files produced - nothing to check."
+            exit 0
+          fi
+          for rom in "${threedsx[@]}"; do
+            echo "== checking $rom =="
+            magic=$(dd if="$rom" bs=1 count=4 2>/dev/null)
+            if [ "$magic" != "3DSX" ]; then
+              echo "FAIL: $rom magic is '$magic', expected '3DSX'"
+              exit 1
+            fi
+            size=$(stat -c%s "$rom")
+            echo "OK: $rom ($size bytes, 3DSX magic valid)"
+          done
+          for rom in "${cias[@]}"; do
+            echo "== checking $rom =="
+            size=$(stat -c%s "$rom")
+            if [ "$size" -lt 512 ]; then
+              echo "FAIL: $rom is implausibly small ($size bytes) for a CIA"
+              exit 1
+            fi
+            echo "OK: $rom ($size bytes, non-trivial CIA container present)"
+          done
+
+      - name: Upload ROM artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n3ds-roms
+          path: |
+            n3ds/games/*/*.3dsx
+            n3ds/games/*/*.cia
+          if-no-files-found: ignore
