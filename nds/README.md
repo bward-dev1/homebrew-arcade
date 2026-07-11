@@ -14,8 +14,10 @@ devkitPro NDS template).
 
 Output: `<game-name>.nds`.
 
-## Games
+## Games (5/5)
 
-None yet. `games/` exists with a `.gitkeep` so the directory is tracked;
-`nds.yml` builds cleanly with zero games (logs it and exits 0) until the
-first one lands here.
+- `maze-muncher` - chase/collector maze game
+- `grid-slither` - snake
+- `card-flip` - card-matching
+- `paddle-bounce` - breakout/paddle
+- `star-defender` - top-down projectile shooter
