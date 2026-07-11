@@ -7,10 +7,6 @@ on:
       - ".github/workflows/nds.yml"
   workflow_dispatch:
 
-env:
-  DEVKITPRO: /opt/devkitpro
-  DEVKITARM: /opt/devkitpro/devkitARM
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,31 +14,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install devkitPro pacman
+      # apt.devkitpro.org (the host behind install-devkitpro-pacman) sits
+      # behind Cloudflare bot-blocking and reliably rejects GitHub Actions
+      # runners with a "Sorry, you have been blocked" page instead of the
+      # install script. Rather than fight that, build inside devkitPro's
+      # own official Docker image (docker.io/devkitpro/devkitarm), which
+      # already ships gba-dev/nds-dev/3ds-dev preinstalled via dkp-pacman
+      # at image-build time - no network call to apt.devkitpro.org happens
+      # in CI at all.
+      - name: Build all NDS games (devkitPro Docker toolchain)
         run: |
-          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x ./install-devkitpro-pacman
-          echo "y" | sudo DEBIAN_FRONTEND=noninteractive ./install-devkitpro-pacman
-
-      - name: Install nds-dev toolchain
-        run: |
-          sudo dkp-pacman -Syu --noconfirm
-          sudo dkp-pacman -S --noconfirm nds-dev
-
-      - name: Build all NDS games
-        run: |
-          export PATH="$DEVKITARM/bin:$PATH"
           shopt -s nullglob
           games=(nds/games/*/)
           if [ ${#games[@]} -eq 0 ]; then
             echo "No games under nds/games/ - nothing to build."
             exit 0
           fi
-          for dir in "${games[@]}"; do
-            name=$(basename "$dir")
-            echo "== building $name =="
-            make -C "$dir"
-          done
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace \
+            devkitpro/devkitarm bash -c '
+              set -e
+              shopt -s nullglob
+              for dir in nds/games/*/; do
+                echo "== building $dir =="
+                make -C "$dir"
+              done
+            '
 
       # Same rationale as gba.yml: a headless melonDS/desmume boot is not
       # reliably available via apt on ubuntu-latest and is fragile to keep

@@ -7,10 +7,6 @@ on:
       - ".github/workflows/n3ds.yml"
   workflow_dispatch:
 
-env:
-  DEVKITPRO: /opt/devkitpro
-  DEVKITARM: /opt/devkitpro/devkitARM
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,31 +14,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install devkitPro pacman
+      # apt.devkitpro.org (the host behind install-devkitpro-pacman) sits
+      # behind Cloudflare bot-blocking and reliably rejects GitHub Actions
+      # runners with a "Sorry, you have been blocked" page instead of the
+      # install script. Rather than fight that, build inside devkitPro's
+      # own official Docker image (docker.io/devkitpro/devkitarm), which
+      # already ships gba-dev/nds-dev/3ds-dev preinstalled via dkp-pacman
+      # at image-build time - no network call to apt.devkitpro.org happens
+      # in CI at all.
+      - name: Build all 3DS games (devkitPro Docker toolchain)
         run: |
-          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x ./install-devkitpro-pacman
-          echo "y" | sudo DEBIAN_FRONTEND=noninteractive ./install-devkitpro-pacman
-
-      - name: Install 3ds-dev toolchain
-        run: |
-          sudo dkp-pacman -Syu --noconfirm
-          sudo dkp-pacman -S --noconfirm 3ds-dev
-
-      - name: Build all 3DS games
-        run: |
-          export PATH="$DEVKITARM/bin:$PATH"
           shopt -s nullglob
           games=(n3ds/games/*/)
           if [ ${#games[@]} -eq 0 ]; then
             echo "No games under n3ds/games/ - nothing to build."
             exit 0
           fi
-          for dir in "${games[@]}"; do
-            name=$(basename "$dir")
-            echo "== building $name =="
-            make -C "$dir"
-          done
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace \
+            devkitpro/devkitarm bash -c '
+              set -e
+              shopt -s nullglob
+              for dir in n3ds/games/*/; do
+                echo "== building $dir =="
+                make -C "$dir"
+              done
+            '
 
       # Same rationale as gba.yml/nds.yml: Lime3DS/Citra have no reliable
       # headless apt package on ubuntu-latest, so a real emulator boot in CI
