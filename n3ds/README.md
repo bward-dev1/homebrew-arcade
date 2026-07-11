@@ -18,6 +18,6 @@ Output: `<game-name>.3dsx` (homebrew-launcher format) and/or
 
 ## Games
 
-None yet. `games/` exists with a `.gitkeep` so the directory is tracked;
-`n3ds.yml` builds cleanly with zero games (logs it and exits 0) until the
-first one lands here.
+- **simon-sez** — button-pattern memory/reaction game. Watch a growing
+  sequence of A/B/X/Y flashes, then repeat it back; each correct round
+  adds a step and speeds up. Console-text-API only (no citro2d needed).
