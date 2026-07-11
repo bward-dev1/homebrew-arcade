@@ -29,7 +29,7 @@ Each platform directory is independent: its own games/ tree, its own
 workflow, its own toolchain group. A push that only touches `gba/**` never
 triggers the nds/3ds workflows and vice versa.
 
-## Games (15/15 — GBA 5/5, NDS 5/5, 3DS 5/5, all CI-green)
+## Games (25/25 — GBA 5/5, NDS 10/10, 3DS 10/10, all CI-green)
 
 ### GBA (`gba/games/`)
 - **pixel-jumper** — side-scrolling run/jump platformer against gravity and gaps.
@@ -44,6 +44,11 @@ triggers the nds/3ds workflows and vice versa.
 - **card-flip** — memory card-matching pairs game.
 - **paddle-bounce** — Breakout-style paddle-and-ball brick clearing.
 - **star-defender** — top-down shooter defending against descending enemies.
+- **mole-mash** — whack-a-mole reaction/timing game.
+- **rune-runner** — auto-scrolling endless runner, jump timing over rocks and pits as speed ramps up.
+- **beat-gate** — timing-bar rhythm game, hit A as the sweeping marker crosses the target zone.
+- **bubble-burst** — color-matching bubble shooter, aim and pop groups of 3+.
+- **block-cascade** — Tetris-style falling-block stacking puzzle.
 
 ### 3DS (`n3ds/games/`)
 - **simon-sez** — memory pattern game, repeat an escalating sequence.
@@ -51,6 +56,11 @@ triggers the nds/3ds workflows and vice versa.
 - **meteor-dash** — top-down dodge/survival against incoming hazards.
 - **vault-run** — maze navigation collecting numbered tumblers in strict order against a clock.
 - **sky-hopper** — vertical climbing platform jumper: hop between platforms up a static tower while an accelerating camera scroll threatens to leave you behind.
+- **asteroid-field** — rotate-and-thrust Asteroids-style shooter with inertia and drag.
+- **gem-swap** — match-3 tile-swap puzzle on an 8x6 grid.
+- **reflex-dig** — whack-a-mole reaction game against a shrinking timer.
+- **brick-smash** — Breakout-style paddle-and-ball brick clearing.
+- **cliff-runner** — side-scrolling platform jumper: auto-run a fixed level, jump pits and spikes with A, reach the flag to win.
 
 ## Adding a new game
 
