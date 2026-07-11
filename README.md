@@ -29,7 +29,7 @@ Each platform directory is independent: its own games/ tree, its own
 workflow, its own toolchain group. A push that only touches `gba/**` never
 triggers the nds/3ds workflows and vice versa.
 
-## Games (25/25 — GBA 5/5, NDS 10/10, 3DS 10/10, all CI-green)
+## Games (26/26 — GBA 5/5, NDS 10/10, 3DS 11/11, all CI-green)
 
 ### GBA (`gba/games/`)
 - **pixel-jumper** — side-scrolling run/jump platformer against gravity and gaps.
@@ -61,6 +61,7 @@ triggers the nds/3ds workflows and vice versa.
 - **reflex-dig** — whack-a-mole reaction game against a shrinking timer.
 - **brick-smash** — Breakout-style paddle-and-ball brick clearing.
 - **cliff-runner** — side-scrolling platform jumper: auto-run a fixed level, jump pits and spikes with A, reach the flag to win.
+- **siege-forge** — build a crude siege machine from wheel/beam/cannon/counterweight blocks on a grid, then launch it at fortresses over 3 escalating-distance rounds, scored on landing proximity.
 
 ## Adding a new game
 
