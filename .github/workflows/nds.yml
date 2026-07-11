@@ -60,17 +60,16 @@ jobs:
               echo "FAIL: $rom size $size bytes is outside the plausible NDS ROM range"
               exit 1
             fi
-            # NDS header: logo checksum is a fixed 16-bit value (0xCF56) at
-            # offset 0x15C, validated by every real NDS boot ROM/emulator.
-            # Read the two raw bytes in file order (no -e endian-swap):
-            # devkitARM/ndstool write this field such that the plain byte
-            # sequence at 0x15C is CF 56, matching the documented constant
-            # directly. The previous `-e` flag byte-swapped 16-bit groups
-            # and produced 56cf, which never matched a real ROM - this was
-            # never validated against an actual build until this game.
+            # NDS header: logo checksum is a fixed 16-bit LE value (0xCF56)
+            # at offset 0x15C, validated by every real NDS boot ROM/emulator.
+            # ndstool writes it little-endian, so the two raw bytes on disk
+            # are 56 CF; xxd -p (no -e) prints them in file order as "56cf".
+            # This check was only ever exercised against an empty games/
+            # dir before maze-muncher - a real ROM shows the expectation
+            # here had never actually been verified against real output.
             checksum=$(xxd -s 0x15C -l 2 -p "$rom")
-            if [ "$checksum" != "cf56" ]; then
-              echo "FAIL: $rom logo checksum at 0x15C is 0x$checksum, expected 0xcf56"
+            if [ "$checksum" != "56cf" ]; then
+              echo "FAIL: $rom logo checksum at 0x15C is 0x$checksum, expected 0x56cf"
               exit 1
             fi
             echo "OK: $rom ($size bytes, logo checksum valid)"
